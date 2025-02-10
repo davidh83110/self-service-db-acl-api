@@ -1,0 +1,165 @@
+name: "CI for Application"
+
+on:
+  pull_request:
+    branches:
+      - main
+      - testing
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+
+env:
+  DOCKER_REGISTRY: davidh83110/flask-app
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipenv --no-cache-dir
+        pipenv install --system --deploy --ignore-pipfile
+    - name: Run Unittest
+      run: |
+        pipenv run pytest
+
+  helm-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+    - name: Setup Helm
+      uses: azure/setup-helm@v4.2.0
+      with:
+        version: v3.14.4
+
+    ## TODO: only trigger if deploy/charts has changes.
+    - name: Run chart-testing (lint)
+      run: |
+        helm lint deploy/charts
+
+    - name: Create kind cluster
+      uses: helm/kind-action@v1.10.0
+
+    - name: Run chart-testing (install)
+      run: |
+        helm upgrade -i flask-app ./deploy/charts
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit --no-cache-dir
+    - name: Run Bandit for Python Common Security Check - SAST(Static Application Security Testing)
+      run: |
+        bandit -c bandit.yaml -r .
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: [unittest, security]
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Docker buildx Setup
+      uses: docker/setup-buildx-action@v1
+    - name: Build Image
+      run: |
+        APP_VERSION=$(cat VERSION)
+        docker build --build-arg APP_VERSION=$APP_VERSION --no-cache -t flask-app .
+    - name: Start Application for Testing
+      run: |
+        # 172.17.0.1 is the Docker main network
+        docker run -p 3000:3000 --name flask-app -e REDIS_HOST=172.17.0.1 -itd flask-app:latest
+        sleep 3
+        docker logs flask-app
+        echo "curl -L http://127.0.0.1:3000/health"
+        curl -vvv -L http://127.0.0.1:3000/health
+        if [[ $(curl -L http://127.0.0.1:3000/health | jq -r .status) == "healthy" ]]; then 
+          echo "container is healthy";
+        else
+          docker logs flask-app
+          echo "/health didn't return 200, hence pipeline will exit"
+          exit 1
+        fi;
+    # - name: Login to Docker Hub
+    #   run: |
+    #     echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+    # - name: Push Image to Docker Hub
+    #   run: |
+    #     APP_VERSION=$(cat VERSION)
+    #     docker tag flask-app:latest "${{ env.DOCKER_REGISTRY }}":$APP_VERSION
+    #     docker push "${{ env.DOCKER_REGISTRY }}":$APP_VERSION
+    # - name: Log out from Docker Hub
+    #   run: docker logout
+
+
+#   build-helm:
+#     permissions:
+#       contents: write
+#     needs: [helm-test]
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Checkout
+#       uses: actions/checkout@v3
+#     - name: Configure Git
+#       run: |
+#         git config user.name "$GITHUB_ACTOR"
+#         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+#     - name: Install Helm
+#       uses: azure/setup-helm@v4
+#       env:
+#         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+#     - name: Package Helm Chart and Upload
+#       run: |
+#         git fetch
+#         helm package deploy/charts -d .cr-release-packages
+#         helm repo index .cr-release-packages --url https://davidh83110.github.io/flask-app
+        
+#         ## Create release and upload artiface by helm/chart-releaser(cr)
+#         install_dir="$RUNNER_TOOL_CACHE/cr"
+#         if [[ ! -d "$install_dir" ]]; then mkdir -p "$install_dir"; fi
+#         echo "Installing chart-releaser..."
+#         curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.1/chart-releaser_1.6.1_linux_amd64.tar.gz"
+#         tar -xzf cr.tar.gz -C "$install_dir"
+#         rm -f cr.tar.gz
+#         export PATH="$install_dir:$PATH"
+        
+        
+#         cr upload -o davidh83110 -r flask-app -c "$(git rev-parse HEAD)" \
+#           --token ${{ secrets.GITHUB_TOKEN }} \
+#           --packages-with-index --push --skip-existing \
+#           --pages-branch gh-pages
+
+
+# #    - name: Run chart-releaser
+# #      uses: helm/chart-releaser-action@v1.6.0
+# #      with:
+# #        skip_packaging: "yes"
+# #        charts_dir: ./deploy/charts/
+# #        pages_branch: "gh-pages"
+# ##        skip_existing: "yes"
+# #      env:
+# #        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+# # TODO: github action output message

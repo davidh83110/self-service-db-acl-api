@@ -1,0 +1,7 @@
+controller:
+  service:
+    enabled: false
+  hostPort:
+    enabled: true
+    ports:
+      http: 3000

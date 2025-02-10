@@ -1,0 +1,22 @@
+mappings:
+  - api_endpoint: /users
+    query: "SELECT id, name, email FROM users;"
+    columns:
+      id: user_id
+      name: user_name
+      email: user_email
+
+  - api_endpoint: "/orders"
+    query: "SELECT id, user_id, status FROM orders;"
+    columns:
+      id: order_id
+      user_id: customer_id
+      total_price: amount
+      status: order_status
+
+  - api_endpoint: "/products"
+    query: "SELECT name, price FROM products;"
+    columns:
+      id: product_id
+      name: product_name
+      price: product_price

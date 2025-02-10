@@ -1,0 +1,20 @@
+image:
+  repository: localhost:30500/flask
+  tag: "0.1.0"
+
+EnvFrom:
+- secretRef:
+    name: flask-secrets
+
+volumeMounts:
+  - name: config
+    mountPath: /app/config.yaml
+    subPath: config.yaml
+
+volumes:
+- name: flask
+  configMap: 
+    name: flask-config
+    items:
+      - key: config.yaml
+        path: config.yaml

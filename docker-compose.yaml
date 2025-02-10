@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  flask:
+    build:
+      context: .
+      args:
+        APP_VERSION: '0.1.0'  # hardcode here
+    image: localhost:30500/flask:0.1.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    environment:
+      - GUNICORN_BIND=0.0.0.0:3000
+      - DB_HOST=postgres
+      - IS_KUBERNETES=false
+
+  postgres:
+    build:
+      context: databases/.
+    image: localhost:30500/postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=mydb

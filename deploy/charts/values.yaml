@@ -1,0 +1,86 @@
+# Default values for flask-app.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## Deployment
+replicaCount: 1
+
+image:
+  repository: localhost:5100/flask
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "0.0.1"
+
+env:
+  gunicorn_bind: '0.0.0.0:3000'
+
+extraEnvs: {}
+
+EnvFrom: {}
+
+livenessProbe:
+  path: /health
+  timeoutSeconds: 5
+  periodSeconds: 5
+  failureThreshold: 10
+
+readinessProbe:
+  path: /health
+  timeoutSeconds: 5
+  periodSeconds: 5
+  failureThreshold: 10
+
+resources:
+   limits:
+     cpu: 100m
+     memory: 256Mi
+   requests:
+     cpu: 50m
+     memory: 128Mi
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+volumeMounts: []
+
+volumes: []
+
+
+## Name
+nameOverride: ""
+fullnameOverride: ""
+
+
+## ServiceAccount
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+
+## Service
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: 3000
+
+
+## Ingress
+ingress:
+  enabled: true
+  className: "nginx"    # Uses Ingress-Nginx IngressClass --> kubernetes.io/ingress.class: nginx
+  annotations: {}
+  hosts:
+    - paths:
+        - path: /
+          pathType: Prefix
+

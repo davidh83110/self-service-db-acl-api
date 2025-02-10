@@ -1,0 +1,54 @@
+global:
+  postgresql:
+    auth:
+      username: postgres
+      password: password
+      database: mydb
+  security:
+    allowInsecureImages: true
+
+securityContext:
+  enabled: true
+  runAsUser: 1001
+  fsGroup: 1001
+  readOnlyRootFilesystem: false
+
+primary:
+  podSecurityContext:
+    runAsUser: 1001
+    fsGroup: 1001 
+
+  service:
+    ports:
+      postgresql: 5432
+
+  extraVolumes:
+    - name: run-postgresql
+      emptyDir: {}
+    - name: init-db
+      configMap: 
+        name: mydb-init
+        items:
+          - key: init.sql
+            path: init.sql
+      defaultMode: 0644
+
+  extraVolumeMounts:
+    - name: run-postgresql
+      mountPath: /var/run/postgresql
+    - name: init-db
+      mountPath: /docker-entrypoint-initdb.d
+
+
+image:
+  registry: localhost:30500
+  repository: postgres
+  tag: "15"
+  pullPolicy: IfNotPresent
+
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: ""  
+  accessModes:
+    - ReadWriteOnce
