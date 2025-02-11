@@ -74,9 +74,6 @@ jobs:
 
   build-docker:
     runs-on: self-hosted
-    # container:
-    #   image: ubuntu:latest
-    #   options: --dns=10.96.0.10  # 設定 Kubernetes 內部 DNS
     needs: [unittest, security]
     steps:
     - name: Check out the repository
@@ -124,55 +121,53 @@ jobs:
         docker push $DOCKER_REGISTRY/postgres:15
 
 
+  build-helm:
+    permissions:
+      contents: write
+    needs: [helm-test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Configure Git
+      run: |
+        git config user.name "$GITHUB_ACTOR"
+        git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+    - name: Install Helm
+      uses: azure/setup-helm@v4
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-
-#   build-helm:
-#     permissions:
-#       contents: write
-#     needs: [helm-test]
-#     runs-on: ubuntu-latest
-#     steps:
-#     - name: Checkout
-#       uses: actions/checkout@v3
-#     - name: Configure Git
-#       run: |
-#         git config user.name "$GITHUB_ACTOR"
-#         git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-#     - name: Install Helm
-#       uses: azure/setup-helm@v4
-#       env:
-#         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-#     - name: Package Helm Chart and Upload
-#       run: |
-#         git fetch
-#         helm package deploy/charts -d .cr-release-packages
-#         helm repo index .cr-release-packages --url https://davidh83110.github.io/flask-app
+    - name: Package Helm Chart and Upload
+      run: |
+        git fetch
+        helm package deploy/charts -d .cr-release-packages
+        helm repo index .cr-release-packages --url https://davidh83110.github.io/self-service-db-acl-api
         
-#         ## Create release and upload artiface by helm/chart-releaser(cr)
-#         install_dir="$RUNNER_TOOL_CACHE/cr"
-#         if [[ ! -d "$install_dir" ]]; then mkdir -p "$install_dir"; fi
-#         echo "Installing chart-releaser..."
-#         curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.1/chart-releaser_1.6.1_linux_amd64.tar.gz"
-#         tar -xzf cr.tar.gz -C "$install_dir"
-#         rm -f cr.tar.gz
-#         export PATH="$install_dir:$PATH"
+        ## Create release and upload artiface by helm/chart-releaser(cr)
+        install_dir="$RUNNER_TOOL_CACHE/cr"
+        if [[ ! -d "$install_dir" ]]; then mkdir -p "$install_dir"; fi
+        echo "Installing chart-releaser..."
+        curl -sSLo cr.tar.gz "https://github.com/helm/chart-releaser/releases/download/v1.6.1/chart-releaser_1.6.1_linux_amd64.tar.gz"
+        tar -xzf cr.tar.gz -C "$install_dir"
+        rm -f cr.tar.gz
+        export PATH="$install_dir:$PATH"
         
         
-#         cr upload -o davidh83110 -r flask-app -c "$(git rev-parse HEAD)" \
-#           --token ${{ secrets.GITHUB_TOKEN }} \
-#           --packages-with-index --push --skip-existing \
-#           --pages-branch gh-pages
+        cr upload -o docker-registry.default.svc.cluster.local:5000 -r flask-app -c "$(git rev-parse HEAD)" \
+          --token ${{ secrets.GITHUB_TOKEN }} \
+          --packages-with-index --push --skip-existing \
+          --pages-branch gh-pages
 
 
-# #    - name: Run chart-releaser
-# #      uses: helm/chart-releaser-action@v1.6.0
-# #      with:
-# #        skip_packaging: "yes"
-# #        charts_dir: ./deploy/charts/
-# #        pages_branch: "gh-pages"
-# ##        skip_existing: "yes"
-# #      env:
-# #        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+#    - name: Run chart-releaser
+#      uses: helm/chart-releaser-action@v1.6.0
+#      with:
+#        skip_packaging: "yes"
+#        charts_dir: ./deploy/charts/
+#        pages_branch: "gh-pages"
+##        skip_existing: "yes"
+#      env:
+#        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-# # TODO: github action output message
+# TODO: github action output message
