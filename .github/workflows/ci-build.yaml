@@ -117,10 +117,7 @@ jobs:
         docker tag localhost:30500/flask:${flask_version} $DOCKER_REGISTRY/flask:${flask_version}
         docker tag localhost:30500/postgres:15 $DOCKER_REGISTRY/postgres:15
 
-        sudo echo '{
-          "insecure-registries": ["docker-registry.default.svc.cluster.local:5000"]
-        }' > /etc/docker/daemon.json
-        sudo service docker restart
+        export DOCKER_CLI_OPTS="--insecure-registry=docker-registry.default.svc.cluster.local:5000"
         docker push --tls-verify=false $DOCKER_REGISTRY/flask:${flask_version}
         docker push --tls-verify=false $DOCKER_REGISTRY/postgres:15
 
