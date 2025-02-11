@@ -96,13 +96,13 @@ jobs:
         # 172.17.0.1 is the Docker main network
         docker compose up -d
         sleep 3
-        docker logs flask
+        docker logs localhost:30500/flask 
         echo "curl -L http://127.0.0.1:3000/health"
         curl -vvv -L http://127.0.0.1:3000/health
         if [[ $(curl -L http://127.0.0.1:3000/health | jq -r .status) == "healthy" ]]; then 
           echo "container is healthy";
         else
-          docker logs flask
+          docker logs localhost:30500/flask 
           echo "/health didn't return 200, hence pipeline will exit"
           exit 1
         fi;
