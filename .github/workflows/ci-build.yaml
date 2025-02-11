@@ -87,18 +87,14 @@ jobs:
         version: 'latest'
     - name: Build Image
       run: |
-        docker-compose version
-        curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-        chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
         docker compose version
         APP_VERSION=$(cat VERSION)
         export flask_version=$APP_VERSION
-        docker-compose build --build-arg APP_VERSION=$APP_VERSION --no-cache
+        docker compose build --build-arg APP_VERSION=$APP_VERSION --no-cache
     - name: Start Application for Testing
       run: |
         # 172.17.0.1 is the Docker main network
-        docker compose version
-        docker-compose up -d
+        docker compose up -d
         sleep 3
         docker logs flask
         echo "curl -L http://127.0.0.1:3000/health"
