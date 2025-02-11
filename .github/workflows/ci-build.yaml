@@ -53,7 +53,7 @@ jobs:
 
     - name: Run chart-testing (install)
       run: |
-        helm upgrade -i flask-app ./deploy/charts
+        helm upgrade -i flask-app ./deploy/charts -f ./deploy/flask-app-values.yaml --dry-run
 
   security:
     runs-on: ubuntu-latest
@@ -85,32 +85,29 @@ jobs:
     - name: Build Image
       run: |
         APP_VERSION=$(cat VERSION)
-        docker build --build-arg APP_VERSION=$APP_VERSION --no-cache -t flask-app .
+        export flask_version=$APP_VERSION
+        docker-compose build --build-arg APP_VERSION=$APP_VERSION --no-cache
     - name: Start Application for Testing
       run: |
         # 172.17.0.1 is the Docker main network
-        docker run -p 3000:3000 --name flask-app -e REDIS_HOST=172.17.0.1 -itd flask-app:latest
+        docker-compose up -d
         sleep 3
-        docker logs flask-app
+        docker logs flask
         echo "curl -L http://127.0.0.1:3000/health"
         curl -vvv -L http://127.0.0.1:3000/health
         if [[ $(curl -L http://127.0.0.1:3000/health | jq -r .status) == "healthy" ]]; then 
           echo "container is healthy";
         else
-          docker logs flask-app
+          docker logs flask
           echo "/health didn't return 200, hence pipeline will exit"
           exit 1
         fi;
-    # - name: Login to Docker Hub
-    #   run: |
-    #     echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
-    # - name: Push Image to Docker Hub
-    #   run: |
-    #     APP_VERSION=$(cat VERSION)
-    #     docker tag flask-app:latest "${{ env.DOCKER_REGISTRY }}":$APP_VERSION
-    #     docker push "${{ env.DOCKER_REGISTRY }}":$APP_VERSION
-    # - name: Log out from Docker Hub
-    #   run: docker logout
+    - name: Push to Image Registry
+      run: |
+        APP_VERSION=$(cat VERSION)
+        export flask_version=$APP_VERSION
+        docker-compose push
+
 
 
 #   build-helm:
