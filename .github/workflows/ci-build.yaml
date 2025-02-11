@@ -154,7 +154,7 @@ jobs:
         export PATH="$install_dir:$PATH"
         
         
-        cr upload -o docker-registry.default.svc.cluster.local:5000 -r flask-app -c "$(git rev-parse HEAD)" \
+        cr upload -o davidh83110 -r self-service-db-acl-api -c "$(git rev-parse HEAD)" \
           --token ${{ secrets.GITHUB_TOKEN }} \
           --packages-with-index --push --skip-existing \
           --pages-branch gh-pages
