@@ -113,7 +113,7 @@ jobs:
         APP_VERSION: ${{ steps.build_image.outputs.APP_VERSION }}
       run: |
         export flask_version=$APP_VERSION
-        docker-compose push
+        docker compose push
 
 
 
