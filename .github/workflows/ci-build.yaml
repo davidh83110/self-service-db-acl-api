@@ -94,19 +94,17 @@ jobs:
         export flask_version=$APP_VERSION
         docker compose build --build-arg APP_VERSION=$APP_VERSION --no-cache
     - name: Start Application for Testing
-      env: 
-        APP_VERSION: ${{ steps.build_image.outputs.APP_VERSION }}
       run: |
         # 172.17.0.1 is the Docker main network
         docker compose up -d
         sleep 3
-        docker logs localhost:30500/flask:$APP_VERSION 
+        docker logs self-service-db-acl-api-flask-1
         echo "curl -L http://127.0.0.1:3000/health"
         curl -vvv -L http://127.0.0.1:3000/health
         if [[ $(curl -L http://127.0.0.1:3000/health | jq -r .status) == "healthy" ]]; then 
           echo "container is healthy";
         else
-          docker logs localhost:30500/flask:$APP_VERSION
+          docker logs self-service-db-acl-api-flask-1
           echo "/health didn't return 200, hence pipeline will exit"
           exit 1
         fi;
