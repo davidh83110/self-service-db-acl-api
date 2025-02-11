@@ -27,44 +27,45 @@ spec:
         volumeMounts:
         - name: registry-storage
           mountPath: /var/lib/registry
-        - name: registry-cert
-          mountPath: /certs/registry.crt
-          subPath: registry.crt
-          readOnly: true
-        - name: registry-key
-          mountPath: /certs/registry.key
-          subPath: registry.key
-          readOnly: true
-        env:
-        - name: REGISTRY_HTTP_TLS_CERTIFICATE
-          value: "/certs/registry.crt"
-        - name: REGISTRY_HTTP_TLS_KEY
-          value: "/certs/registry.key"
+        # - name: registry-cert
+        #   mountPath: /certs/registry.crt
+        #   subPath: registry.crt
+        #   readOnly: true
+        # - name: registry-key
+        #   mountPath: /certs/registry.key
+        #   subPath: registry.key
+        #   readOnly: true
+        # env:
+        # - name: REGISTRY_HTTP_TLS_CERTIFICATE
+        #   value: "/certs/registry.crt"
+        # - name: REGISTRY_HTTP_TLS_KEY
+        #   value: "/certs/registry.key"
       volumes:
-      - name: registry-cert
-        secret:
-          secretName: registry-tls
-          items:
-          - key: tls.crt
-            path: registry.crt
-      - name: registry-key
-        secret:
-          secretName: registry-tls
-          items:
-          - key: tls.key
-            path: registry.key
+      # - name: registry-cert
+      #   secret:
+      #     secretName: registry-tls
+      #     items:
+      #     - key: tls.crt
+      #       path: registry.crt
+      # - name: registry-key
+      #   secret:
+      #     secretName: registry-tls
+      #     items:
+      #     - key: tls.key
+      #       path: registry.key
       - name: registry-storage
         emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: docker-registry
-spec:
-  type: NodePort
-  ports:
-  - port: 5000
-    targetPort: 5000
-    nodePort: 30500
-  selector:
-    app: docker-registry
+# ---
+# TODO: TLS support
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: docker-registry
+# spec:
+#   type: NodePort
+#   ports:
+#   - port: 5000
+#     targetPort: 5000
+#     nodePort: 30500
+#   selector:
+#     app: docker-registry

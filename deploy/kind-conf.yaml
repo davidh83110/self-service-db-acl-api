@@ -14,5 +14,3 @@ nodes:
     protocol: TCP
   - containerPort: 3000   # flask-app
     hostPort: 3000
-
-

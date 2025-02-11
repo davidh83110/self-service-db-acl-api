@@ -7,12 +7,12 @@ EnvFrom:
     name: flask-secrets
 
 volumeMounts:
-  - name: config
+  - name: flask-config
     mountPath: /app/config.yaml
     subPath: config.yaml
 
 volumes:
-- name: flask
+- name: flask-config
   configMap: 
     name: flask-config
     items:

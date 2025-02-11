@@ -46,5 +46,5 @@ metadata:
 data:
   daemon.json: |
     {
-        "insecure-registries": ["docker-registry.default.svc.cluster.local:5000"]
+        "insecure-registries": ["docker-registry.default.svc.cluster.local:5000", "localhost:30500"]
     }

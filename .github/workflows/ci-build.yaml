@@ -11,9 +11,6 @@ on:
     branches:
       - main
 
-env:
-  DOCKER_REGISTRY: davidh83110/flask-app
-
 jobs:
   unittest:
     runs-on: ubuntu-latest
@@ -158,16 +155,5 @@ jobs:
           --token ${{ secrets.GITHUB_TOKEN }} \
           --packages-with-index --push --skip-existing \
           --pages-branch gh-pages
-
-
-#    - name: Run chart-releaser
-#      uses: helm/chart-releaser-action@v1.6.0
-#      with:
-#        skip_packaging: "yes"
-#        charts_dir: ./deploy/charts/
-#        pages_branch: "gh-pages"
-##        skip_existing: "yes"
-#      env:
-#        CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
 # TODO: github action output message
