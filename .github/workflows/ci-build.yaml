@@ -116,8 +116,8 @@ jobs:
         DOCKER_REGISTRY=docker-registry.default.svc.cluster.local:5000
         docker tag localhost:30500/flask:${flask_version} $DOCKER_REGISTRY/flask:${flask_version}
         docker tag localhost:30500/postgres:15 $DOCKER_REGISTRY/postgres:15
-        docker push $DOCKER_REGISTRY/flask:${flask_version}
-        docker push $DOCKER_REGISTRY/postgres:15
+        docker push --tls-verify=false $DOCKER_REGISTRY/flask:${flask_version}
+        docker push --tls-verify=false $DOCKER_REGISTRY/postgres:15
 
 
 
