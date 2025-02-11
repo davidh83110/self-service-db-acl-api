@@ -73,7 +73,10 @@ jobs:
         bandit -c bandit.yaml -r .
 
   build-docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    container:
+      image: ubuntu:latest
+      options: --dns=10.96.0.10  # 設定 Kubernetes 內部 DNS
     needs: [unittest, security]
     steps:
     - name: Check out the repository

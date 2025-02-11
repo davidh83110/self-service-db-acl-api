@@ -8,4 +8,43 @@ spec:
   template:
     spec:
       repository: davidh83110/self-service-db-acl-api
+      image: summerwind/actions-runner-dind
+      dockerEnabled: true
+      dockerdWithinRunnerContainer: true
 
+      volumeMounts:
+        - name: docker-registry-cert
+          mountPath: /usr/local/share/ca-certificates/ca.crt
+          subPath: ca.crt
+          readOnly: true
+        - mountPath: /etc/docker/daemon.json
+          name: daemon-config-volume
+          subPath: daemon.json
+      volumes:
+        - name: docker-registry-cert
+          secret:
+            secretName: docker-registry-cert
+            items:
+            - key: ca.crt
+              path: ca.crt
+        - name: docker-config
+          emptyDir: {}
+        - name: daemon-config-volume
+          configMap:
+            name: daemon-cm
+            items:
+              - key: daemon.json
+                path: daemon.json
+      securityContext:
+        fsGroup: 1001 # runner user id
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: daemon-cm
+  namespace: github-runner
+data:
+  daemon.json: |
+    {
+        "insecure-registries": ["docker-registry.default.svc.cluster.local:5000"]
+    }
