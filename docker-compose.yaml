@@ -1,11 +1,10 @@
-version: '3.8'
 services:
   flask:
     build:
       context: .
       args:
         APP_VERSION: '0.1.0'  # hardcode here
-    image: localhost:30500/flask::${flask_version:-0.1.0}
+    image: localhost:30500/flask:${flask_version:-0.1.0}
     ports:
       - "3000:3000"
     depends_on:
@@ -18,7 +17,7 @@ services:
   postgres:
     build:
       context: databases/.
-    image: localhost:30500/postgres::${postgres_version:-15}
+    image: localhost:30500/postgres:${postgres_version:-15}
     ports:
       - "5432:5432"
     environment:
