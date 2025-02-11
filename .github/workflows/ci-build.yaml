@@ -101,11 +101,11 @@ jobs:
         docker logs self-service-db-acl-api-flask-1
         echo "curl -L http://127.0.0.1:3000/health"
         curl -vvv -L http://127.0.0.1:3000/health
-        if [[ $(curl -L http://127.0.0.1:3000/health | jq -r .status) == "healthy" ]]; then 
+        if [[ $(curl -L http://127.0.0.1:3000/health | jq -r .status) == "ok" ]]; then 
           echo "container is healthy";
         else
           docker logs self-service-db-acl-api-flask-1
-          echo "/health didn't return 200, hence pipeline will exit"
+          echo "/health didn't return 200 or status is not ok, hence pipeline will exit"
           exit 1
         fi;
     - name: Push to Image Registry
