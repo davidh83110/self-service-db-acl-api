@@ -113,9 +113,14 @@ jobs:
         APP_VERSION: ${{ steps.build_image.outputs.APP_VERSION }}
       run: |
         export flask_version=$APP_VERSION
-        DOCKER_REGISTRY=docker-registry.default.svc.cluster.local:5000
+        DOCKER_REGISTRY=http://docker-registry.default.svc.cluster.local:5000
         docker tag localhost:30500/flask:${flask_version} $DOCKER_REGISTRY/flask:${flask_version}
         docker tag localhost:30500/postgres:15 $DOCKER_REGISTRY/postgres:15
+
+        # echo '{
+        #   "insecure-registries": ["docker-registry.default.svc.cluster.local:5000"]
+        # }' > /etc/docker/daemon.json
+        # service docker restart
         docker push --tls-verify=false $DOCKER_REGISTRY/flask:${flask_version}
         docker push --tls-verify=false $DOCKER_REGISTRY/postgres:15
 
