@@ -7,6 +7,8 @@
 - [http://localhost:3000](http://localhost:3000)
 - [http://localhost:3000/health](http://localhost:3000/health)
 
+![alt text](img/flask_status.png)
+
 ### We also launch a registry in the local Kubernetes cluster
 🐳 Docker Registry 
 ```bash
@@ -124,8 +126,13 @@ Build and Push Docker Images of Flask and Postgres to local registry
 - Upgrade Helm charts if needed
 > We should improve the authentication. Now I'm just using a Service Account for this Runner.
 
+![alt text](img/kube_status.png)
+
 ## Versioning
+![alt text](img/registry_list.png)
+
 I use a [VERSION](VERSION) file to control the Application version, which will be the `APP_VERSION` when we build the Docker Image.
 But in real environment, I think we can do it with `tags triggering`, `auto increament`, or integrate with `Jira`/`Github Project`. 
 
 For Postgres versioning, the image tag will always be the `Git Commit ID`.
+
