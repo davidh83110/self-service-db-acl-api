@@ -28,14 +28,14 @@ else
 fi;
 
 ## Create Kind Cluster
-kind create cluster --config ./kind-conf.yaml -n kind-flask
+kind create cluster --config ./infra/kind-conf.yaml -n kind-flask
 
 ## Install Ingress-Nginx
-helm install ingress-nginx ingress-nginx/ingress-nginx -f ./ingress-nginx-values.yaml
+helm install ingress-nginx ingress-nginx/ingress-nginx -f ./infra/ingress-nginx-values.yaml
 sleep 3
 
 ## Install Local Registry
-kubectl apply -f ./registry.yaml
+kubectl apply -f ./registry/registry.yaml
 sleep 3
 health_check "http://localhost:30500/v2/_catalog"
 
@@ -61,3 +61,22 @@ helm upgrade -i flask-app ./charts -f ./flask-app-values.yaml
 helm list
 kubectl get pod
 health_check "http://localhost:3000/health"
+
+
+## Setup ARC and Github Runners
+helm repo add jetstack https://charts.jetstack.io --force-update
+helm upgrade -i cert-manager jetstack/cert-manager \
+  --namespace cert-manager --create-namespace \
+  --version v1.17.0 \
+  --set crds.enabled=true
+sleep 3
+
+helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
+helm repo update
+helm upgrade -i --namespace actions-runner-system --create-namespace \
+  --set=authSecret.create=true \
+  --set=authSecret.github_token="" \
+  --wait actions-runner-controller actions-runner-controller/actions-runner-controller
+
+kubectl create namespace github-runner
+kubectl apply -f ./gh-runners/

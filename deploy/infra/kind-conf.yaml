@@ -10,7 +10,7 @@ nodes:
         node-labels: "ingress-ready=true"
   extraPortMappings:
   - containerPort: 30500  # docker registry
-    hostPort: 30500 
+    hostPort: 30501 
     protocol: TCP
   - containerPort: 3000   # flask-app
-    hostPort: 3000
+    hostPort: 3001

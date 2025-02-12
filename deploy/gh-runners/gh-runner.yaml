@@ -14,20 +14,20 @@ spec:
       dockerdWithinRunnerContainer: true
 
       volumeMounts:
-        - name: docker-registry-cert
-          mountPath: /usr/local/share/ca-certificates/ca.crt
-          subPath: ca.crt
-          readOnly: true
+        # - name: docker-registry-cert
+        #   mountPath: /usr/local/share/ca-certificates/ca.crt
+        #   subPath: ca.crt
+        #   readOnly: true
         - mountPath: /etc/docker/daemon.json
           name: daemon-config-volume
           subPath: daemon.json
       volumes:
-        - name: docker-registry-cert
-          secret:
-            secretName: docker-registry-cert
-            items:
-            - key: ca.crt
-              path: ca.crt
+        # - name: docker-registry-cert
+        #   secret:
+        #     secretName: docker-registry-cert
+        #     items:
+        #     - key: ca.crt
+        #       path: ca.crt
         - name: docker-config
           emptyDir: {}
         - name: daemon-config-volume

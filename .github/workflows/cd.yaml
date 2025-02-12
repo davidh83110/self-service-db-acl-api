@@ -1,16 +1,13 @@
 name: Deploy
 
 on:
-  pull_request:
-    branches:
-      - main
-      - testing
   push:
     tags:
       - '*'
     branches:
       - main
 
+# TODO: on PR should return dry run results
 jobs:
   deploy:
     runs-on: self-hosted
@@ -67,3 +64,4 @@ jobs:
           --set 'image.registry=localhost:30500' \
           --set 'image.repository=postgres' \
           --set 'image.tag=${{github.sha}}'
+
