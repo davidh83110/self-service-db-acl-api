@@ -25,7 +25,22 @@ jobs:
       uses: azure/setup-helm@v4.2.0
       with:
         version: v3.14.4
+    - name: Apply Config
+      run: |
+        kubectl create configmap flask-config --from-file=config.yaml --dry-run=client -o yaml >> config-cm.yaml  
+
+        if ! kubectl diff -f ./config-cm.yaml > /dev/null; then
+          echo "Changes detected. Applying new ConfigMap..."
+          kubectl apply -f ./config-cm.yaml 
+
+          # In case the deployment doesn't exist
+          # TODO: auto-reloader could better handle it, but let's leave it for now.
+          kubectl rollout restart deployment flask-app || true
+        else
+          echo "No changes detected."
+        fi
+
     - name: Helm upgrade
       run: |
         # TODO: Change to fine-grained permission.
-        helm upgrade -i flask-app ./deploy/charts -f ./deploy/flask-app-values.yaml --set 'image.repository=localhost:30500/flask' --set 'image.tag=0.1.1'
+        helm upgrade -i flask-app ./deploy/charts -f ./deploy/flask-app-values.yaml -n default --set 'image.repository=localhost:30500/flask' --set 'image.tag=0.1.1'
