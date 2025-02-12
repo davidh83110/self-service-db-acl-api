@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name:  cicd-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["pods", "services", "namespaces", "deployments", "replicasets"]
+  verbs: ["get", "list", "create", "update", "delete", "create"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cicd-clusterrole-sa-binding
+subjects:
+- kind: ServiceAccount
+  name: cicd-sa
+  namespace: github-runner
+roleRef:
+  kind: ClusterRole
+  name: cicd-clusterrole
+  apiGroup: rbac.authorization.k8s.io

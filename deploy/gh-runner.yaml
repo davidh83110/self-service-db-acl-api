@@ -7,6 +7,7 @@ spec:
   replicas: 1
   template:
     spec:
+      serviceAccountName: cicd-sa
       repository: davidh83110/self-service-db-acl-api
       image: summerwind/actions-runner-dind
       dockerEnabled: true
