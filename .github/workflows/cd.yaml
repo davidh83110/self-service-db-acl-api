@@ -25,9 +25,9 @@ jobs:
       uses: azure/setup-helm@v4.2.0
       with:
         version: v3.14.4
-    - name: Apply Config
+    - name: App - Apply Config
       run: |
-        kubectl create configmap flask-config --from-file=config.yaml --dry-run=client -n default -o yaml >> config-cm.yaml  
+        kubectl create configmap flask-config --from-file=config.yaml --dry-run=client -n default -o yaml > config-cm.yaml  
 
         if ! kubectl diff -f ./config-cm.yaml -n default > /dev/null; then
           echo "Changes detected. Applying new ConfigMap..."
@@ -40,7 +40,29 @@ jobs:
           echo "No changes detected."
         fi
 
-    - name: Helm upgrade
+    - name: App - Helm upgrade
       run: |
         # TODO: Change to fine-grained permission.
         helm upgrade -i flask-app ./deploy/charts -f ./deploy/flask-app-values.yaml -n default --set 'image.repository=localhost:30500/flask' --set 'image.tag=0.1.1'
+
+    - name: DB - Apply Config
+      run: |
+        kubectl create configmap mydb-init --from-file=./databases/init.sql --dry-run=client -n default -o yaml > my-db-init-cm.yaml
+
+        if ! kubectl diff -f ./my-db-init-cm.yaml -n default > /dev/null; then
+          echo "Changes detected. Applying new ConfigMap..."
+
+          # This change won't affect anything if the DB is already running.
+          kubectl apply -f ./my-db-init-cm.yaml -n default
+        else
+          echo "No changes detected."
+        fi
+
+    - name: DB - Helm upgrade
+      run: |
+        # TODO: Replace to self-hosted chart.
+        # TODO: Retrieve DB secrets from Secret Stores and pass them to the chart, or manage the secrets separately.
+        helm upgrade -i postgres bitnami/postgresql -f ./deploy/postgres-values.yaml -n default \
+          --set 'image.registry=localhost:30500' \
+          --set 'image.repository=postgres' \
+          --set 'image.tag=${{github.sha}}'
