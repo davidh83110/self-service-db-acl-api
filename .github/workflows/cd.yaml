@@ -62,6 +62,7 @@ jobs:
       run: |
         # TODO: Replace to self-hosted chart.
         # TODO: Retrieve DB secrets from Secret Stores and pass them to the chart, or manage the secrets separately.
+        helm repo add bitnami https://charts.bitnami.com/bitnami     
         helm upgrade -i postgres bitnami/postgresql -f ./deploy/postgres-values.yaml -n default \
           --set 'image.registry=localhost:30500' \
           --set 'image.repository=postgres' \
