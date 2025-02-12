@@ -4,7 +4,7 @@ metadata:
   name:  cicd-clusterrole
 rules:
 - apiGroups: [""]
-  resources: ["pods", "services", "namespaces", "deployments", "replicasets"]
+  resources: ["pods", "services", "namespaces", "deployments", "replicasets", "secrets"]
   verbs: ["get", "list", "create", "update", "delete", "create"]
 
 ---

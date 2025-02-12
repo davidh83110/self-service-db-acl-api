@@ -28,4 +28,4 @@ jobs:
     - name: Helm upgrade
       run: |
         # TODO: Change to fine-grained permission.
-        helm upgrade -i flask-app ./charts -f ./flask-app-values.yaml --set 'image.repository=localhost:30500/flask' --set 'image.tag=0.1.1'
+        helm upgrade -i flask-app ./deploy/charts -f ./deploy/flask-app-values.yaml --set 'image.repository=localhost:30500/flask' --set 'image.tag=0.1.1'
