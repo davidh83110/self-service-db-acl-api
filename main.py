@@ -2,6 +2,7 @@ import os
 import yaml
 import psycopg2
 import logging
+import json
 from flask import Flask, jsonify, request
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -14,6 +15,9 @@ class MessageHandler:
     invalid_api_endpoint = "Invalid API Endpoint"
     invalid_api_config = "Invalid API configuration"
     health_check_error = "Health check error"
+    missing_required_fields = "Missing required fields in configuration"
+    config_update_success = "Configuration updated successfully"
+    config_update_error = "Error updating configuration"
     
 
 
@@ -62,6 +66,45 @@ class ConfigHandler:
             "password": os.getenv("DB_PASSWORD", "password"),
             "port": int(os.getenv("DB_PORT", 5432)),
         }
+        
+    def update_config(self, new_mapping):
+        """
+        Update config.yaml with new mapping
+        """
+        try:
+            # Read the current full config
+            with open(self.config_path, "r") as file:
+                config_data = yaml.safe_load(file)
+                
+            # If config is empty, initialize it
+            if not config_data:
+                config_data = {"mappings": []}
+                
+            # Check if the endpoint already exists
+            endpoint_exists = False
+            for i, mapping in enumerate(config_data.get("mappings", [])):
+                if mapping.get("api_endpoint") == new_mapping.get("api_endpoint"):
+                    # Update existing mapping
+                    config_data["mappings"][i] = new_mapping
+                    endpoint_exists = True
+                    break
+                    
+            # If endpoint doesn't exist, add it
+            if not endpoint_exists:
+                config_data["mappings"].append(new_mapping)
+                
+            # Write updated config back to file
+            with open(self.config_path, "w") as file:
+                yaml.dump(config_data, file, default_flow_style=False)
+                
+            # Reload the mappings
+            self.mappings = self.load_config()
+            
+            return True, "Configuration updated successfully"
+            
+        except Exception as e:
+            logging.error(f"Error updating config: {e}")
+            return False, f"Error updating config: {str(e)}"
 
 
 class DatabaseHandler:
@@ -196,6 +239,21 @@ config_handler = ConfigHandler()
 db_handler = DatabaseHandler(config_handler)
 api_handler = APIHandler(config_handler, db_handler)
 
+@app.route("/")
+def root():
+    """
+    Root endpoint - shows available endpoints
+    """
+    endpoints = [mapping["api_endpoint"] for mapping in config_handler.mappings]
+    endpoints.append("/health")
+    endpoints.append("/update")
+    
+    return jsonify({
+        "status": "ok",
+        "available_endpoints": endpoints,
+        "version": config_handler.metadata["version"]
+    })
+
 @app.route("/<path:path>")
 def dynamic_route(path):
     return api_handler.handle_request(path)
@@ -203,4 +261,43 @@ def dynamic_route(path):
 @app.route("/health")
 def health_check():
     return api_handler.health_check()
+
+@app.route("/update", methods=["POST"])
+def update_config():
+    """
+    Update configuration endpoint
+    Accepts JSON with new mapping configuration
+    """
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ["api_endpoint", "query", "columns"]
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    "status": "error",
+                    "message": f"{message_handler.missing_required_fields}: '{field}' is required"
+                }), 400
+        
+        # Update configuration
+        success, message = config_handler.update_config(data)
+        
+        if success:
+            return jsonify({
+                "status": "success",
+                "message": message_handler.config_update_success
+            }), 200
+        else:
+            return jsonify({
+                "status": "error",
+                "message": f"{message_handler.config_update_error}: {message}"
+            }), 500
+            
+    except Exception as e:
+        logging.error(f"Error in update_config: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"{message_handler.config_update_error}: {str(e)}"
+        }), 500
 
